@@ -68,7 +68,7 @@ extern RGB _FBHSB2RGB(HSB hsb)
 
 extern RGB _FBRGBColorComponents(UIColor *color)
 {
-  RGB result;
+  RGB result = {0, 0, 0, 0};
   CGColorSpaceModel colorSpaceModel = CGColorSpaceGetModel(CGColorGetColorSpace(color.CGColor));
   if (colorSpaceModel != kCGColorSpaceModelRGB && colorSpaceModel != kCGColorSpaceModelMonochrome) {
     return result;
