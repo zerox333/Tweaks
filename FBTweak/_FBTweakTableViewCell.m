@@ -30,6 +30,7 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
   _FBTweakTableViewCellModeDictionary,
   _FBTweakTableViewCellModeArray,
   _FBTweakTableViewCellModeColor,
+  _FBTweakTableViewCellModeFont,
 };
 
 @interface _FBTweakTableViewCell () <UITextFieldDelegate>
@@ -81,7 +82,8 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
     [_switch sizeToFit];
     _accessoryView.bounds = _switch.bounds;
   } else if (_mode == _FBTweakTableViewCellModeInteger ||
-             _mode == _FBTweakTableViewCellModeReal) {
+             _mode == _FBTweakTableViewCellModeReal ||
+             _mode == _FBTweakTableViewCellModeFont) {
     [_stepper sizeToFit];
     
     CGRect textFrame = CGRectMake(0, 0, self.bounds.size.width / 4, self.bounds.size.height);
@@ -145,6 +147,8 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
     } else {
       mode = _FBTweakTableViewCellModeReal;
     }
+  } else if ([value isKindOfClass:[UIFont class]]) {
+      mode = _FBTweakTableViewCellModeFont;
   } else if ([_tweak isAction]) {
     mode = _FBTweakTableViewCellModeAction;
   }
@@ -253,6 +257,28 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
     self.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     self.accessoryView = nil;
     self.imageView.hidden = NO;
+  } else if (_mode == _FBTweakTableViewCellModeFont) {
+    _switch.hidden = YES;
+    _textField.hidden = NO;
+    _textField.keyboardType = UIKeyboardTypeNumberPad;
+    _stepper.hidden = NO;
+    if (_tweak.stepValue) {
+      _stepper.stepValue = [_tweak.stepValue floatValue];
+    } else {
+      _stepper.stepValue = 1.0;
+    }
+
+    if (_tweak.minimumValue != nil) {
+      _stepper.minimumValue = [_tweak.minimumValue pointSize];
+    } else {
+      _stepper.minimumValue = [_tweak.defaultValue pointSize] / 10.0;
+    }
+
+    if (_tweak.maximumValue != nil) {
+      _stepper.maximumValue = [_tweak.maximumValue pointSize];
+    } else {
+      _stepper.maximumValue = [_tweak.defaultValue pointSize] * 10.0;
+    }
   } else {
     _switch.hidden = YES;
     _textField.hidden = YES;
@@ -286,6 +312,8 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
   } else if (_mode == _FBTweakTableViewCellModeReal) {
     NSNumber *number = @([_textField.text doubleValue]);
     [self _updateValue:number primary:NO write:YES];
+  } else if (_mode == _FBTweakTableViewCellModeFont) {
+      [self _updateValue:[_tweak.defaultValue fontWithSize:[_textField.text doubleValue]] primary:NO write:YES];
   } else {
     NSAssert(NO, @"unexpected type");
   }
@@ -296,6 +324,8 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
   if (_mode == _FBTweakTableViewCellModeInteger) {
     NSNumber *number = @([@(stepper.value) longLongValue]);
     [self _updateValue:number primary:NO write:YES];
+  } else if (_mode == _FBTweakTableViewCellModeFont) {
+    [self _updateValue:[_tweak.defaultValue fontWithSize:stepper.value] primary:NO write:YES];
   } else {
     [self _updateValue:@(stepper.value) primary:NO write:YES];
   }
@@ -344,6 +374,11 @@ typedef NS_ENUM(NSUInteger, _FBTweakTableViewCellMode) {
     }
   } else if (_mode == _FBTweakTableViewCellModeColor) {
     [self.imageView setImage:_FBCreateColorCellsThumbnail(value, CGSizeMake(30, 30))];
+  } else if (_mode == _FBTweakTableViewCellModeFont) {
+    if (primary) {
+      _stepper.value = [value pointSize];
+    }
+    _textField.text = [@([value pointSize]) stringValue];
   }
 }
 
